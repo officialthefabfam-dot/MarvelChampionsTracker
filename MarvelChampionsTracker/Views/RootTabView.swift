@@ -264,27 +264,91 @@ struct DecksView: View {
 
 struct CollectionView: View {
     @EnvironmentObject private var store: TrackerStore
+    @State private var searchText = ""
+
+    private let categories = ["Campaign / expansion", "Hero pack", "Scenario pack"]
+
+    private var filteredItems: [CollectionItem] {
+        guard !searchText.isEmpty else { return store.data.collection }
+        return store.data.collection.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText)
+                || $0.category.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
     var body: some View {
         ScreenBackground(title: "Collection") {
             Panel {
-                Text("Expansion checklist").font(.headline).foregroundStyle(Theme.navy)
-                Text("Tick off the boxes as your collection grows.").font(.subheadline).foregroundStyle(Theme.muted)
-                ForEach(store.data.collection) { item in
-                    Button { store.toggleOwned(item) } label: {
-                        HStack {
-                            Image(systemName: item.isOwned ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(item.isOwned ? Theme.gold : Theme.muted)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(item.name).foregroundStyle(Theme.navy).font(.subheadline.weight(.medium))
-                                Text(item.category).foregroundStyle(Theme.muted).font(.caption)
-                            }
-                            Spacer()
-                        }
-                    }.buttonStyle(.plain)
-                    Divider()
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Your collection").font(.headline).foregroundStyle(Theme.navy)
+                        Text("Track every box and pack you own.").font(.subheadline).foregroundStyle(Theme.muted)
+                    }
+                    Spacer()
+                    Image(systemName: "shippingbox.fill").font(.title2).foregroundStyle(Theme.gold)
                 }
-                Text("\(store.data.collection.filter(\.isOwned).count) of \(store.data.collection.count) marked owned")
-                    .font(.caption.weight(.semibold)).foregroundStyle(Theme.blue)
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill").foregroundStyle(Theme.gold)
+                    Text("\(store.data.collection.filter(\\.isOwned).count) / \(store.data.collection.count) owned")
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.navy)
+                    Spacer()
+                    Text("\(store.data.collection.isEmpty ? 0 : Int(Double(store.data.collection.filter(\\.isOwned).count) / Double(store.data.collection.count) * 100))%")
+                        .font(.caption.weight(.bold)).foregroundStyle(Theme.blue)
+                }
+                GeometryReader { geometry in
+                    let total = max(store.data.collection.count, 1)
+                    let owned = store.data.collection.filter(\\.isOwned).count
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Theme.canvas)
+                        Capsule().fill(Theme.gold).frame(width: geometry.size.width * CGFloat(owned) / CGFloat(total))
+                    }
+                }
+                .frame(height: 8)
+            }
+
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").foregroundStyle(Theme.muted)
+                TextField("Find a pack or expansion", text: $searchText)
+                    .textInputAutocapitalization(.never)
+            }
+            .padding(12)
+            .background(Theme.panel, in: RoundedRectangle(cornerRadius: 12))
+
+            ForEach(categories, id: \.self) { category in
+                let items = filteredItems.filter { $0.category == category }.sorted { $0.name < $1.name }
+                if !items.isEmpty {
+                    Panel {
+                        HStack {
+                            Text(category).font(.headline).foregroundStyle(Theme.navy)
+                            Spacer()
+                            Text("\(items.filter(\\.isOwned).count)/\(items.count)")
+                                .font(.caption.weight(.semibold)).foregroundStyle(Theme.blue)
+                        }
+                        ForEach(items) { item in
+                            Button { store.toggleOwned(item) } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: item.isOwned ? "checkmark.circle.fill" : "circle")
+                                        .font(.title3)
+                                        .foregroundStyle(item.isOwned ? Theme.gold : Theme.muted)
+                                    Text(item.name)
+                                        .foregroundStyle(Theme.navy)
+                                        .font(.subheadline.weight(.medium))
+                                    Spacer()
+                                    if item.isOwned {
+                                        Text("OWNED").font(.system(size: 9, weight: .bold)).tracking(0.8)
+                                            .foregroundStyle(Theme.gold)
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            Divider()
+                        }
+                    }
+                }
+            }
+            if filteredItems.isEmpty {
+                Panel { EmptyMessage(text: "No matching packs found.") }
             }
         }
     }
