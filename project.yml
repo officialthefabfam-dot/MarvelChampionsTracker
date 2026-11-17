@@ -1,0 +1,28 @@
+name: MarvelChampionsTracker
+options:
+  bundleIdPrefix: com.officialthefabfam
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+    INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+targets:
+  MarvelChampionsTracker:
+    type: application
+    platform: iOS
+    sources:
+      - path: MarvelChampionsTracker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.officialthefabfam.marvelchampionstracker
+        PRODUCT_NAME: Marvel Champions Tracker
+        INFOPLIST_KEY_CFBundleDisplayName: Champions Tracker
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
