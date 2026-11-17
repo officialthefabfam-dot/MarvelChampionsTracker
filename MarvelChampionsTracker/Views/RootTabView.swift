@@ -289,15 +289,15 @@ struct CollectionView: View {
                 }
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.seal.fill").foregroundStyle(Theme.gold)
-                    Text("\(store.data.collection.filter(\\.isOwned).count) / \(store.data.collection.count) owned")
+                    Text("\(store.data.collection.filter(\.isOwned).count) / \(store.data.collection.count) owned")
                         .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.navy)
                     Spacer()
-                    Text("\(store.data.collection.isEmpty ? 0 : Int(Double(store.data.collection.filter(\\.isOwned).count) / Double(store.data.collection.count) * 100))%")
+                    Text("\(store.data.collection.isEmpty ? 0 : Int(Double(store.data.collection.filter(\.isOwned).count) / Double(store.data.collection.count) * 100))%")
                         .font(.caption.weight(.bold)).foregroundStyle(Theme.blue)
                 }
                 GeometryReader { geometry in
                     let total = max(store.data.collection.count, 1)
-                    let owned = store.data.collection.filter(\\.isOwned).count
+                    let owned = store.data.collection.filter(\.isOwned).count
                     ZStack(alignment: .leading) {
                         Capsule().fill(Theme.canvas)
                         Capsule().fill(Theme.gold).frame(width: geometry.size.width * CGFloat(owned) / CGFloat(total))
@@ -321,7 +321,7 @@ struct CollectionView: View {
                         HStack {
                             Text(category).font(.headline).foregroundStyle(Theme.navy)
                             Spacer()
-                            Text("\(items.filter(\\.isOwned).count)/\(items.count)")
+                            Text("\(items.filter(\.isOwned).count)/\(items.count)")
                                 .font(.caption.weight(.semibold)).foregroundStyle(Theme.blue)
                         }
                         ForEach(items) { item in
