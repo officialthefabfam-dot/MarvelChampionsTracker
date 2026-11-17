@@ -7,13 +7,50 @@ final class TrackerStore: ObservableObject {
 
     private let fileURL: URL
 
+    // Master catalogue. Existing ownership choices are preserved when this list grows.
+    private static let collectionCatalogue: [CollectionItem] = {
+        let heroPacks = [
+            "Captain America", "Ms. Marvel", "Thor", "Black Widow", "Doctor Strange", "Hulk",
+            "Ant-Man", "Wasp", "Quicksilver", "Scarlet Witch", "Star-Lord", "Gamora", "Drax",
+            "Venom", "Nebula", "War Machine", "Valkyrie", "Vision", "Nova", "Ironheart",
+            "Spider-Ham", "SP//dr", "Cyclops", "Phoenix", "Wolverine", "Storm", "Gambit",
+            "Rogue", "Psylocke", "Angel", "X-23", "Deadpool", "Iceman", "Jubilee",
+            "Nightcrawler", "Magneto", "Black Panther (Shuri)", "Silk", "Falcon",
+            "Winter Soldier", "Wonder Man", "Hercules", "Jessica Jones", "Luke Cage",
+            "Elektra", "Iron Fist"
+        ].map { CollectionItem(name: $0, category: "Hero pack") }
+
+        let campaigns = [
+            "Core Set", "The Rise of Red Skull", "The Galaxy's Most Wanted",
+            "The Mad Titan's Shadow", "Sinister Motives", "Mutant Genesis",
+            "NeXt Evolution", "Age of Apocalypse", "Agents of S.H.I.E.L.D.",
+            "Civil War", "Fear No Evil", "Captain America"
+        ].map { CollectionItem(name: $0, category: "Campaign / expansion") }
+
+        let scenarios = [
+            "The Green Goblin", "The Wrecking Crew", "The Once and Future Kang",
+            "The Hood", "MojoMania", "Trickster Takeover", "Synthezoid Smackdown",
+            "Shadowland"
+        ].map { CollectionItem(name: $0, category: "Scenario pack") }
+
+        return campaigns + heroPacks + scenarios
+    }()
+
     init() {
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         fileURL = directory.appendingPathComponent("champions-tracker.json")
         if let contents = try? Data(contentsOf: fileURL),
            let saved = try? JSONDecoder().decode(TrackerData.self, from: contents) {
-            data = saved
+            // Merge in newly catalogued products without resetting anything the player has tracked.
+            var migrated = saved
+            let existingNames = Set(saved.collection.map { $0.name.localizedLowercase })
+            let additions = Self.collectionCatalogue.filter {
+                !existingNames.contains($0.name.localizedLowercase)
+            }
+            migrated.collection.append(contentsOf: additions)
+            data = migrated
+            if !additions.isEmpty { persist() }
         } else {
             data = TrackerData(
                 heroes: [
@@ -27,14 +64,7 @@ final class TrackerStore: ObservableObject {
                     Scenario(name: "Klaw", difficulty: "Standard"),
                     Scenario(name: "Ultron", difficulty: "Standard")
                 ],
-                collection: [
-                    CollectionItem(name: "Core Set", category: "Core Set"),
-                    CollectionItem(name: "Rise of Red Skull", category: "Campaign"),
-                    CollectionItem(name: "Galaxy's Most Wanted", category: "Campaign"),
-                    CollectionItem(name: "Mad Titan's Shadow", category: "Campaign"),
-                    CollectionItem(name: "Sinister Motives", category: "Campaign"),
-                    CollectionItem(name: "Mutant Genesis", category: "Campaign")
-                ]
+                collection: Self.collectionCatalogue
             )
             persist()
         }
