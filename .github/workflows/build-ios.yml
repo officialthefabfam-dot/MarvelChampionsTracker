@@ -45,7 +45,7 @@ jobs:
 
       - name: Package IPA
         run: |
-          APP_PATH="build/DerivedData/Build/Products/Release-iphoneos/MarvelChampionsTracker.app"
+          APP_PATH="build/DerivedData/Build/Products/Release-iphoneos/Marvel Champions Tracker.app"
           test -d "$APP_PATH"
           mkdir -p build/Payload
           cp -R "$APP_PATH" build/Payload/
